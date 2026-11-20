@@ -1,0 +1,231 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Shared Hardened Primitives (Supports Anonymous Auto-Cloud & Verified Google Clinicians)
+    function isSignedIn() {
+      return request.auth != null && (
+        request.auth.token.firebase.sign_in_provider == 'anonymous' ||
+        request.auth.token.email_verified == true
+      );
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwnerIncoming() {
+      return isSignedIn() && incoming().ownerUid == request.auth.uid;
+    }
+
+    function isOwnerExisting() {
+      return isSignedIn() && existing().ownerUid == request.auth.uid;
+    }
+
+    // Entity Validators
+    function isValidClinician(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'activePatientId', 'audioAlarmEnabled', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'email', 'activePatientId', 'audioAlarmEnabled', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && (!('email' in data) || (
+          request.auth.token.email_verified == true
+          && data.email is string
+          && data.email.size() <= 160
+        ))
+        && isValidId(data.activePatientId) && data.activePatientId.size() <= 64
+        && data.audioAlarmEnabled is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPatientConfig(data) {
+      return data.keys().hasAll([
+          'ownerUid', 'patientId', 'mrn', 'name', 'age', 'gender',
+          'affectedSide', 'strokeHistory', 'onsetDuration', 'targetRom',
+          'ashworthScore', 'ashworthNumeric', 'attendingPhysician', 'deviceId',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid', 'patientId', 'mrn', 'name', 'age', 'gender',
+          'affectedSide', 'strokeHistory', 'onsetDuration', 'targetRom',
+          'ashworthScore', 'ashworthNumeric', 'attendingPhysician', 'deviceId',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.ownerUid) && data.ownerUid == request.auth.uid
+        && isValidId(data.patientId) && data.patientId.size() <= 64
+        && data.mrn is string && data.mrn.size() >= 1 && data.mrn.size() <= 64
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.age is int && data.age >= 1 && data.age <= 120
+        && data.gender in ['Laki-laki', 'Perempuan']
+        && data.affectedSide is string && data.affectedSide.size() >= 1 && data.affectedSide.size() <= 120
+        && data.strokeHistory is string && data.strokeHistory.size() >= 1 && data.strokeHistory.size() <= 240
+        && data.onsetDuration is string && data.onsetDuration.size() >= 1 && data.onsetDuration.size() <= 100
+        && data.targetRom is number && data.targetRom >= 15 && data.targetRom <= 180
+        && data.ashworthScore is string && data.ashworthScore.size() >= 1 && data.ashworthScore.size() <= 160
+        && data.ashworthNumeric is number && data.ashworthNumeric >= 0 && data.ashworthNumeric <= 4
+        && data.attendingPhysician is string && data.attendingPhysician.size() >= 1 && data.attendingPhysician.size() <= 120
+        && data.deviceId is string && data.deviceId.size() >= 1 && data.deviceId.size() <= 64
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidScreeningReport(data) {
+      return data.keys().hasAll([
+          'ownerUid', 'patientId', 'sessionId', 'startedAtLabel', 'endedAtLabel',
+          'durationSec', 'sampleCount', 'avgEmgMv', 'peakEmgMv',
+          'avgFlex', 'maxFlex', 'spasticityCount', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid', 'patientId', 'sessionId', 'statusBadge', 'startedAtLabel', 'endedAtLabel',
+          'durationSec', 'durationLabel', 'sampleCount', 'avgEmgMv', 'peakEmgMv', 'peakRawSemg',
+          'avgFlex', 'maxFlex', 'spasticityCount', 'patientNote', 'createdAt'
+        ])
+        && isValidId(data.ownerUid) && data.ownerUid == request.auth.uid
+        && isValidId(data.patientId) && data.patientId.size() <= 64
+        && data.sessionId is string && data.sessionId.size() >= 1 && data.sessionId.size() <= 80
+        && (!('statusBadge' in data) || (data.statusBadge is string && data.statusBadge.size() <= 80))
+        && data.startedAtLabel is string && data.startedAtLabel.size() <= 32
+        && data.endedAtLabel is string && data.endedAtLabel.size() <= 32
+        && data.durationSec is int && data.durationSec >= 0 && data.durationSec <= 86400
+        && (!('durationLabel' in data) || (data.durationLabel is string && data.durationLabel.size() <= 80))
+        && data.sampleCount is int && data.sampleCount >= 0 && data.sampleCount <= 1000000
+        && data.avgEmgMv is number && data.avgEmgMv >= 0 && data.avgEmgMv <= 3300
+        && data.peakEmgMv is number && data.peakEmgMv >= 0 && data.peakEmgMv <= 3300
+        && (!('peakRawSemg' in data) || (data.peakRawSemg is int && data.peakRawSemg >= 0 && data.peakRawSemg <= 4095))
+        && data.avgFlex is number && data.avgFlex >= 0 && data.avgFlex <= 180
+        && data.maxFlex is number && data.maxFlex >= 0 && data.maxFlex <= 180
+        && data.spasticityCount is int && data.spasticityCount >= 0 && data.spasticityCount <= 100000
+        && (!('patientNote' in data) || (data.patientNote is string && data.patientNote.size() <= 500))
+        && data.createdAt is timestamp;
+    }
+
+    function isValidPrescription(data) {
+      return data.keys().hasAll([
+          'ownerUid', 'patientId', 'targetFlex', 'intensity',
+          'clinicalNote', 'physician', 'topic', 'sentAt', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid', 'patientId', 'targetFlex', 'intensity',
+          'clinicalNote', 'physician', 'topic', 'sentAt', 'createdAt'
+        ])
+        && isValidId(data.ownerUid) && data.ownerUid == request.auth.uid
+        && isValidId(data.patientId) && data.patientId.size() <= 64
+        && data.targetFlex is number && data.targetFlex >= 15 && data.targetFlex <= 180
+        && data.intensity in ['Pasif Terbantu', 'Aktif Asistif', 'Aktif Mandiri', 'Relaksasi Tonus']
+        && data.clinicalNote is string && data.clinicalNote.size() >= 1 && data.clinicalNote.size() <= 800
+        && data.physician is string && data.physician.size() >= 1 && data.physician.size() <= 120
+        && data.topic is string && data.topic.size() >= 1 && data.topic.size() <= 160
+        && data.sentAt is string && data.sentAt.size() >= 1 && data.sentAt.size() <= 32
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAiAnalysis(data) {
+      return data.keys().hasAll([
+          'ownerUid', 'patientId', 'clinicalHeadline', 'riskLevel',
+          'emgTrendAnalysis', 'romEvaluation', 'recommendedTargetRom',
+          'actionableRecommendations', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid', 'patientId', 'clinicalHeadline', 'riskLevel',
+          'emgTrendAnalysis', 'romEvaluation', 'recommendedTargetRom',
+          'actionableRecommendations', 'createdAt'
+        ])
+        && isValidId(data.ownerUid) && data.ownerUid == request.auth.uid
+        && isValidId(data.patientId) && data.patientId.size() <= 64
+        && data.clinicalHeadline is string && data.clinicalHeadline.size() >= 1 && data.clinicalHeadline.size() <= 300
+        && data.riskLevel is string && data.riskLevel.size() >= 1 && data.riskLevel.size() <= 64
+        && data.emgTrendAnalysis is string && data.emgTrendAnalysis.size() >= 1 && data.emgTrendAnalysis.size() <= 1000
+        && data.romEvaluation is string && data.romEvaluation.size() >= 1 && data.romEvaluation.size() <= 1000
+        && data.recommendedTargetRom is int && data.recommendedTargetRom >= 15 && data.recommendedTargetRom <= 180
+        && data.actionableRecommendations is list
+        && data.actionableRecommendations.size() >= 1
+        && data.actionableRecommendations.size() <= 5
+        && data.actionableRecommendations[0] is string
+        && data.actionableRecommendations[0].size() <= 300
+        && data.createdAt is timestamp;
+    }
+
+    // 1. Clinician Profiles (PII protected by owner-only gate)
+    match /clinicians/{uid} {
+      allow get: if isSignedIn() && isValidId(uid) && request.auth.uid == uid;
+      allow list: if false;
+      allow create: if isSignedIn() && isValidId(uid) && request.auth.uid == uid
+        && isValidClinician(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(uid) && request.auth.uid == uid
+        && isValidClinician(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'activePatientId', 'audioAlarmEnabled', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // 2. Patient Clinical Configs (Target ROM & Profile)
+    match /patientConfigs/{docId} {
+      allow get: if isOwnerExisting() && isValidId(docId);
+      allow list: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isOwnerIncoming() && isValidId(docId)
+        && isValidPatientConfig(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isOwnerExisting() && isValidId(docId)
+        && isValidPatientConfig(incoming())
+        && incoming().ownerUid == existing().ownerUid
+        && incoming().patientId == existing().patientId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['targetRom', 'ashworthScore', 'ashworthNumeric', 'updatedAt']);
+      allow delete: if isOwnerExisting() && isValidId(docId);
+    }
+
+    // 3. Screening Reports (Immutable clinical logs once recorded)
+    match /screeningReports/{docId} {
+      allow get: if isOwnerExisting() && isValidId(docId);
+      allow list: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isOwnerIncoming() && isValidId(docId)
+        && isValidScreeningReport(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isOwnerExisting() && isValidId(docId);
+    }
+
+    // 4. Clinical Prescriptions (Immutable audit trail)
+    match /prescriptions/{docId} {
+      allow get: if isOwnerExisting() && isValidId(docId);
+      allow list: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isOwnerIncoming() && isValidId(docId)
+        && isValidPrescription(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isOwnerExisting() && isValidId(docId);
+    }
+
+    // 5. AI Clinical Analyses Archive
+    match /aiAnalyses/{docId} {
+      allow get: if isOwnerExisting() && isValidId(docId);
+      allow list: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isOwnerIncoming() && isValidId(docId)
+        && isValidAiAnalysis(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isOwnerExisting() && isValidId(docId);
+    }
+  }
+}

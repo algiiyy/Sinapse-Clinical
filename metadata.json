@@ -1,0 +1,6 @@
+{
+  "name": "SYNAPSE Clinical",
+  "description": "Portal Pemantauan Dokter & Fisioterapis untuk rehabilitasi pasca-stroke dengan perangkat sarung tangan pintar NeuroHand-IoT berbasis MQTT & AI Klinis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

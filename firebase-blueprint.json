@@ -1,0 +1,344 @@
+{
+  "entities": {
+    "ClinicianProfile": {
+      "title": "ClinicianProfile",
+      "description": "Profil dokter atau fisioterapis yang login dan preferensi monitoring aktif.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "activePatientId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "audioAlarmEnabled": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "activePatientId", "audioAlarmEnabled", "createdAt", "updatedAt"]
+    },
+    "PatientConfig": {
+      "title": "PatientConfig",
+      "description": "Data profil dan target ROM klinis pasien rehabilitasi pasca-stroke yang tersimpan di cloud.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "patientId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "mrn": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "age": {
+          "type": "integer"
+        },
+        "gender": {
+          "type": "string",
+          "enum": ["Laki-laki", "Perempuan"]
+        },
+        "affectedSide": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "strokeHistory": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "onsetDuration": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "targetRom": {
+          "type": "number"
+        },
+        "ashworthScore": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "ashworthNumeric": {
+          "type": "number"
+        },
+        "attendingPhysician": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "deviceId": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "patientId",
+        "mrn",
+        "name",
+        "age",
+        "gender",
+        "affectedSide",
+        "strokeHistory",
+        "onsetDuration",
+        "targetRom",
+        "ashworthScore",
+        "ashworthNumeric",
+        "attendingPhysician",
+        "deviceId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ScreeningReport": {
+      "title": "ScreeningReport",
+      "description": "Laporan sesi skrining selesai yang diterima dari platform SiPasien dan disimpan permanen di cloud.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "patientId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "statusBadge": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "startedAtLabel": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "endedAtLabel": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "durationSec": {
+          "type": "integer"
+        },
+        "durationLabel": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "sampleCount": {
+          "type": "integer"
+        },
+        "avgEmgMv": {
+          "type": "number"
+        },
+        "peakEmgMv": {
+          "type": "number"
+        },
+        "peakRawSemg": {
+          "type": "integer"
+        },
+        "avgFlex": {
+          "type": "number"
+        },
+        "maxFlex": {
+          "type": "number"
+        },
+        "spasticityCount": {
+          "type": "integer"
+        },
+        "patientNote": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "patientId",
+        "sessionId",
+        "startedAtLabel",
+        "endedAtLabel",
+        "durationSec",
+        "sampleCount",
+        "avgEmgMv",
+        "peakEmgMv",
+        "avgFlex",
+        "maxFlex",
+        "spasticityCount",
+        "createdAt"
+      ]
+    },
+    "ClinicalPrescription": {
+      "title": "ClinicalPrescription",
+      "description": "Riwayat resep latihan dan target ROM baru yang dikirim dokter ke SiPasien via MQTT.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "patientId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "targetFlex": {
+          "type": "number"
+        },
+        "intensity": {
+          "type": "string",
+          "enum": ["Pasif Terbantu", "Aktif Asistif", "Aktif Mandiri", "Relaksasi Tonus"]
+        },
+        "clinicalNote": {
+          "type": "string",
+          "maxLength": 800
+        },
+        "physician": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "topic": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "sentAt": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "patientId",
+        "targetFlex",
+        "intensity",
+        "clinicalNote",
+        "physician",
+        "topic",
+        "sentAt",
+        "createdAt"
+      ]
+    },
+    "AiClinicalAnalysis": {
+      "title": "AiClinicalAnalysis",
+      "description": "Ringkasan analisis klinis AI yang tersimpan untuk referensi dokter.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "patientId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "clinicalHeadline": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "riskLevel": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "emgTrendAnalysis": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "romEvaluation": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "recommendedTargetRom": {
+          "type": "integer"
+        },
+        "actionableRecommendations": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "patientId",
+        "clinicalHeadline",
+        "riskLevel",
+        "emgTrendAnalysis",
+        "romEvaluation",
+        "recommendedTargetRom",
+        "actionableRecommendations",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/clinicians/{uid}": {
+      "schema": { "$ref": "#/entities/ClinicianProfile" },
+      "description": "Profil dan preferensi dokter yang sedang login."
+    },
+    "/patientConfigs/{docId}": {
+      "schema": { "$ref": "#/entities/PatientConfig" },
+      "description": "Konfigurasi profil dan target ROM pasien milik dokter."
+    },
+    "/screeningReports/{docId}": {
+      "schema": { "$ref": "#/entities/ScreeningReport" },
+      "description": "Laporan hasil skrining pasien yang tersimpan dari sesi SiPasien."
+    },
+    "/prescriptions/{docId}": {
+      "schema": { "$ref": "#/entities/ClinicalPrescription" },
+      "description": "Riwayat resep latihan dokter yang dikirim via MQTT."
+    },
+    "/aiAnalyses/{docId}": {
+      "schema": { "$ref": "#/entities/AiClinicalAnalysis" },
+      "description": "Arsip hasil analisis klinis AI Gemini untuk tiap pasien."
+    }
+  }
+}
