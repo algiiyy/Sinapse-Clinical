@@ -7,7 +7,6 @@ import {
   MAX_FLEX_ANGLE_DEG,
 } from '../data/patients';
 import { PatientProfile, ScreeningSession, TelemetrySample } from '../types/clinical';
-import { Hand3DVisualizer } from './Hand3DVisualizer';
 import { LiveTelemetryChart } from './LiveTelemetryChart';
 
 interface ScreeningFocusViewProps {
@@ -204,15 +203,6 @@ export const ScreeningFocusView: React.FC<ScreeningFocusViewProps> = ({
           </p>
         </div>
       </div>
-
-      {/* Realistic 3D Hand Kinematics */}
-      <Hand3DVisualizer
-        flexAngle={currentFlex}
-        targetRom={patient.targetRom}
-        emgMv={currentEmgMv}
-        isSpasticityAlert={isSpastic}
-        heightClassName="h-72 sm:h-80"
-      />
 
       {/* Focused Live Waveforms */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

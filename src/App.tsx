@@ -9,11 +9,14 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
+import { ActivePrescriptionCard } from './components/ActivePrescriptionCard';
 import { AiClinicalAssistant } from './components/AiClinicalAssistant';
 import { EvaluationPanel } from './components/EvaluationPanel';
+import { LastScreeningSummaryStrip } from './components/LastScreeningSummaryStrip';
 import { LiveTelemetryChart } from './components/LiveTelemetryChart';
 import { MqttSettingsPanel } from './components/MqttSettingsPanel';
 import { PatientSummaryCard } from './components/PatientSummaryCard';
+import { RomTrendChartCard } from './components/RomTrendChartCard';
 import { ScreeningFocusView } from './components/ScreeningFocusView';
 import { ScreeningResultModal } from './components/ScreeningResultModal';
 import { ScreeningTrackerCard } from './components/ScreeningTrackerCard';
@@ -166,6 +169,13 @@ export default function App() {
     () => cloudAnalyses.filter((a) => a.patientId === activePatient.id),
     [activePatient.id, cloudAnalyses]
   );
+
+  const latestCompletedScreening = useMemo(() => {
+    if (visibleScreenings.length === 0) return null;
+    return [...visibleScreenings].sort((a, b) => b.startedAt - a.startedAt)[0] ?? null;
+  }, [visibleScreenings]);
+
+  const latestPrescription = visiblePrescriptions[0] ?? null;
 
   const latestSample = samples[samples.length - 1];
   const isSpasticityAlert = latestSample?.status === 'Spasticity Alert';
@@ -378,11 +388,37 @@ export default function App() {
                 <PatientSummaryCard
                   patient={activePatient}
                   patients={mergedPatients}
-                  currentFlex={latestSample?.flex ?? visibleScreenings[0]?.maxFlex ?? 0}
+                  currentFlex={latestSample?.flex ?? latestCompletedScreening?.maxFlex ?? 0}
                   onSelectPatient={handleSelectPatient}
                 />
 
-                {/* Screening History First */}
+                {/* 3-Column Last Screening Summary Strip */}
+                <LastScreeningSummaryStrip
+                  latestSession={latestCompletedScreening}
+                  totalSessions={visibleScreenings.length}
+                  targetRom={activePatient.targetRom}
+                  onInspectLatest={(session) => setInspectedScreeningResult(session)}
+                />
+
+                {/* 2-Column Balanced Grid: ROM Progression Trend + Active Prescription */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                  <div className="lg:col-span-7">
+                    <RomTrendChartCard
+                      sessions={visibleScreenings}
+                      targetRom={activePatient.targetRom}
+                      onInspectSession={(session) => setInspectedScreeningResult(session)}
+                    />
+                  </div>
+                  <div className="lg:col-span-5">
+                    <ActivePrescriptionCard
+                      patient={activePatient}
+                      latestPrescription={latestPrescription}
+                      onOpenEvaluation={() => handleSelectTab('evaluation')}
+                    />
+                  </div>
+                </div>
+
+                {/* Screening History */}
                 <ScreeningTrackerCard
                   activeScreening={activeScreening}
                   completedScreenings={visibleScreenings}
